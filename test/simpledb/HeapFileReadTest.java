@@ -4,6 +4,7 @@ import simpledb.systemtest.SimpleDbTestBase;
 import simpledb.systemtest.SystemTestUtil;
 
 import java.util.*;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -73,10 +74,12 @@ public class HeapFileReadTest extends SimpleDbTestBase {
         // NOTE(ghuo): we try not to dig too deeply into the Page API here; we
         // rely on HeapPageTest for that. perform some basic checks.
         assertEquals(484, page.getNumEmptySlots());
-        assertTrue(page.getSlot(1));
-        assertFalse(page.getSlot(20));
+        assertTrue(page.isSlotUsed(1));
+        assertFalse(page.isSlotUsed(20));
     }
-
+    
+    // some code goes here
+    // some code goes here
     @Test
     public void testIteratorBasic() throws Exception {
         HeapFile smallFile = SystemTestUtil.createRandomHeapFile(2, 3, null,
