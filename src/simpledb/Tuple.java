@@ -3,6 +3,7 @@ package simpledb;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.NoSuchElementException;
 
 /**
  * Tuple maintains information about the contents of a tuple. Tuples have a
@@ -12,7 +13,10 @@ import java.util.Iterator;
 public class Tuple implements Serializable {
 
     private static final long serialVersionUID = 1L;
-
+    
+    private TupleDesc td;
+    private Field[] fields;
+    private RecordId recordId;
     /**
      * Create a new tuple with the specified schema (type).
      * 
@@ -22,6 +26,8 @@ public class Tuple implements Serializable {
      */
     public Tuple(TupleDesc td) {
         // some code goes here
+    	this.td = td;
+    	this.fields = new Field[td.numFields()];
     }
 
     /**
@@ -29,7 +35,7 @@ public class Tuple implements Serializable {
      */
     public TupleDesc getTupleDesc() {
         // some code goes here
-        return null;
+        return this.td;
     }
 
     /**
@@ -38,7 +44,7 @@ public class Tuple implements Serializable {
      */
     public RecordId getRecordId() {
         // some code goes here
-        return null;
+        return this.recordId;
     }
 
     /**
@@ -48,7 +54,7 @@ public class Tuple implements Serializable {
      *            the new RecordId for this tuple.
      */
     public void setRecordId(RecordId rid) {
-        // some code goes here
+        this.recordId = rid;
     }
 
     /**
@@ -60,7 +66,10 @@ public class Tuple implements Serializable {
      *            new value for the field.
      */
     public void setField(int i, Field f) {
-        // some code goes here
+    	if(i < 0 || i >= this.fields.length) {
+    		throw new NoSuchElementException("Index " + i + " out of range: 0~" + this.fields.length);
+    	}
+        this.fields[i] = f;
     }
 
     /**
@@ -70,8 +79,10 @@ public class Tuple implements Serializable {
      *            field index to return. Must be a valid index.
      */
     public Field getField(int i) {
-        // some code goes here
-        return null;
+    	if(i < 0 || i >= this.fields.length) {
+    		throw new NoSuchElementException("Index " + i + " out of range: 0~" + this.fields.length);
+    	}
+        return this.fields[i];
     }
 
     /**
@@ -83,8 +94,16 @@ public class Tuple implements Serializable {
      * where \t is any whitespace, except newline, and \n is a newline
      */
     public String toString() {
-        // some code goes here
-        throw new UnsupportedOperationException("Implement this");
+        String str = "";
+        for(int i = 0; i < this.td.numFields(); i++) {
+        	str += this.td.getFieldName(i);
+        	if(i != this.td.numFields() - 1) {
+        		str += " ";
+        	} else {
+        		// new line here
+        	}
+        }
+        return str;
     }
     
     /**
@@ -93,8 +112,26 @@ public class Tuple implements Serializable {
      * */
     public Iterator<Field> fields()
     {
-        // some code goes here
-        return null;
+    	return new Iterator<Field>() {
+        	private int idx = -1;
+        	
+			@Override
+			public boolean hasNext() {
+				return idx+1< fields.length;
+			}
+			@Override
+			public Field next() {
+				if (++idx == fields.length) {
+					throw new NoSuchElementException();
+				} else {
+					return fields[idx];
+				}
+			}
+			@Override
+			public void remove() {
+				throw new UnsupportedOperationException("unimplemented");
+			}
+        };
     }
     
     /**
