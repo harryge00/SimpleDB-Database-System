@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -17,15 +18,39 @@ import java.util.concurrent.ConcurrentHashMap;
  * @Threadsafe
  */
 public class Catalog {
-
+	
     /**
      * Constructor.
      * Creates a new, empty catalog.
      */
     public Catalog() {
-        // some code goes here
+        this.id2TableMap = new ConcurrentHashMap<Integer, TableItem>();
+        this.name2TidMap = new ConcurrentHashMap<String, Integer>();
     }
+    private final Map<Integer, TableItem> id2TableMap;
+    private final Map<String, Integer> name2TidMap;
+    
+    public static class TableItem implements Serializable {
 
+        private static final long serialVersionUID = 1L;
+
+        public final DbFile file;
+        
+        public final String pkey;
+        
+        public final String tableName;
+
+        public TableItem(DbFile file, String tableName, String pkey) {
+            this.file = file;
+            this.pkey = pkey;
+            this.tableName = tableName;
+        }
+
+        public String toString() {
+            return this.tableName;
+        }
+    }
+    
     /**
      * Add a new table to the catalog.
      * This table's contents are stored in the specified DbFile.
@@ -36,7 +61,9 @@ public class Catalog {
      * @param pkeyField the name of the primary key field
      */
     public void addTable(DbFile file, String name, String pkeyField) {
-        // some code goes here
+        TableItem ti = new TableItem(file, name, pkeyField);
+        this.id2TableMap.put(file.getId(), ti);
+        this.name2TidMap.put(name, file.getId());
     }
 
     public void addTable(DbFile file, String name) {
@@ -59,8 +86,14 @@ public class Catalog {
      * @throws NoSuchElementException if the table doesn't exist
      */
     public int getTableId(String name) throws NoSuchElementException {
-        // some code goes here
-        return 0;
+    	if(name == null) {
+    		throw new NoSuchElementException("Null key not allowed.");
+    	}
+    	Integer tid = this.name2TidMap.get(name);
+        if(tid == null) {
+        	throw new NoSuchElementException("Invalid name " + name);
+        }
+        return tid;
     }
 
     /**
@@ -70,8 +103,11 @@ public class Catalog {
      * @throws NoSuchElementException if the table doesn't exist
      */
     public TupleDesc getTupleDesc(int tableid) throws NoSuchElementException {
-        // some code goes here
-        return null;
+        TableItem ti = this.id2TableMap.get(tableid);
+        if(ti == null) {
+        	throw new NoSuchElementException("Invalid tableid " + tableid);
+        }
+        return ti.file.getTupleDesc();
     }
 
     /**
@@ -81,28 +117,37 @@ public class Catalog {
      *     function passed to addTable
      */
     public DbFile getDatabaseFile(int tableid) throws NoSuchElementException {
-        // some code goes here
-        return null;
+    	TableItem ti = this.id2TableMap.get(tableid);
+        if(ti == null) {
+        	throw new NoSuchElementException("Invalid tableid " + tableid);
+        }
+        return ti.file;
     }
 
     public String getPrimaryKey(int tableid) {
-        // some code goes here
-        return null;
+    	TableItem ti = this.id2TableMap.get(tableid);
+        if(ti == null) {
+        	throw new NoSuchElementException("Invalid tableid " + tableid);
+        }
+        return ti.pkey;
     }
 
     public Iterator<Integer> tableIdIterator() {
-        // some code goes here
-        return null;
+        return this.id2TableMap.keySet().iterator();
     }
 
     public String getTableName(int id) {
-        // some code goes here
-        return null;
+    	TableItem ti = this.id2TableMap.get(id);
+        if(ti == null) {
+        	throw new NoSuchElementException("Invalid tableid " + id);
+        }
+        return ti.tableName;
     }
     
     /** Delete all tables from the catalog */
     public void clear() {
-        // some code goes here
+        this.id2TableMap.clear();
+        this.name2TidMap.clear();
     }
     
     /**
